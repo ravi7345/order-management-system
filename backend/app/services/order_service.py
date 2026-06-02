@@ -42,8 +42,7 @@ def create_order(db: Session, payload: OrderCreate):
         product.quantity_in_stock -= qty
 
     db.commit()
-    db.refresh(order)
-    return get_order_or_404(db, order.id)
+    return to_order_response(get_order_or_404(db, order.id))
 
 
 def get_orders(db: Session):
