@@ -1,6 +1,6 @@
-export function Card({ title, subtitle, children, className = '', accent = false }) {
+export function Card({ title, subtitle, children, className = '' }) {
   return (
-    <section className={`card ${accent ? 'card--accent' : ''} ${className}`.trim()}>
+    <section className={`card ${className}`.trim()}>
       {(title || subtitle) && (
         <header className="card__header">
           {title && <h2>{title}</h2>}

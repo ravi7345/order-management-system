@@ -5,15 +5,8 @@ export function TopBar({ activeView }) {
 
   return (
     <header className="topbar">
-      <div>
-        <p className="topbar__eyebrow">Workspace</p>
-        <h1>{meta.title}</h1>
-        <p className="topbar__subtitle">{meta.subtitle}</p>
-      </div>
-      <div className="topbar__badge">
-        <span className="pulse-dot" />
-        Live sync
-      </div>
+      <h1>{meta.title}</h1>
+      <p className="topbar__subtitle">{meta.subtitle}</p>
     </header>
   )
 }

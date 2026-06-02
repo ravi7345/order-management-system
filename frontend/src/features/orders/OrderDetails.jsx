@@ -8,7 +8,7 @@ export function OrderDetails({ order }) {
     <aside className="order-details">
       <div className="order-details__header">
         <div>
-          <p className="order-details__eyebrow">Order detail</p>
+          <p className="order-details__eyebrow">Order</p>
           <h3>#{order.id}</h3>
         </div>
         <Badge variant="info">{formatCurrency(order.total_amount)}</Badge>
@@ -20,7 +20,7 @@ export function OrderDetails({ order }) {
           <dd>{order.customer_name}</dd>
         </div>
         <div>
-          <dt>Placed</dt>
+          <dt>Date</dt>
           <dd>{formatDate(order.created_at)}</dd>
         </div>
       </dl>
