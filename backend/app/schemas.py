@@ -57,6 +57,14 @@ class ProductOut(ProductBase):
     model_config = ConfigDict(from_attributes=True)
 
 
+class PaginatedProductsOut(BaseModel):
+    items: list[ProductOut]
+    total: int = Field(..., ge=0, examples=[42])
+    page: int = Field(..., ge=1, examples=[1])
+    page_size: int = Field(..., ge=1, examples=[10])
+    total_pages: int = Field(..., ge=0, examples=[5])
+
+
 class CustomerCreate(BaseModel):
     full_name: str = Field(..., min_length=1, max_length=120, examples=["Jane Doe"])
     email: EmailStr = Field(..., examples=["jane.doe@example.com"])
@@ -80,6 +88,14 @@ class CustomerOut(CustomerCreate):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class PaginatedCustomersOut(BaseModel):
+    items: list[CustomerOut]
+    total: int = Field(..., ge=0, examples=[18])
+    page: int = Field(..., ge=1, examples=[1])
+    page_size: int = Field(..., ge=1, examples=[10])
+    total_pages: int = Field(..., ge=0, examples=[2])
 
 
 class OrderItemCreate(BaseModel):
@@ -119,6 +135,14 @@ class OrderOut(BaseModel):
     items: list[OrderItemOut]
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class PaginatedOrdersOut(BaseModel):
+    items: list[OrderOut]
+    total: int = Field(..., ge=0, examples=[25])
+    page: int = Field(..., ge=1, examples=[1])
+    page_size: int = Field(..., ge=1, examples=[10])
+    total_pages: int = Field(..., ge=0, examples=[3])
 
 
 class DashboardOut(BaseModel):

@@ -20,13 +20,21 @@ def add_order_item(
     return item
 
 
-def get_orders(db: Session) -> list[models.Order]:
+def get_orders_query(db: Session):
     return (
         db.query(models.Order)
-        .options(joinedload(models.Order.customer), joinedload(models.Order.items).joinedload(models.OrderItem.product))
+        .options(
+            joinedload(models.Order.customer),
+            joinedload(models.Order.items).joinedload(models.OrderItem.product),
+        )
         .order_by(models.Order.id.desc())
-        .all()
     )
+
+
+def get_orders_paginated(db: Session, page: int, page_size: int) -> tuple[list[models.Order], int]:
+    from app.utils.pagination import paginate_query
+
+    return paginate_query(get_orders_query(db), page, page_size)
 
 
 def get_order_by_id(db: Session, order_id: int) -> models.Order | None:

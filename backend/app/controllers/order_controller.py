@@ -8,8 +8,8 @@ def create_order(db: Session, payload: OrderCreate):
     return order_service.create_order(db, payload)
 
 
-def list_orders(db: Session):
-    return order_service.get_orders(db)
+def list_orders(db: Session, page: int, page_size: int):
+    return order_service.get_orders(db, page, page_size)
 
 
 def get_order(db: Session, order_id: int):

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { AppLayout } from './components/layout/AppLayout'
 import { Alert } from './components/ui/Alert'
 import { InventoryProvider, useInventory } from './context/InventoryContext'
@@ -16,12 +16,16 @@ const VIEWS = {
 }
 
 function AppContent() {
-  const { loading, error } = useInventory()
+  const { viewLoading, error, loadView } = useInventory()
   const [activeView, setActiveView] = useState('dashboard')
   const ActiveSection = VIEWS[activeView]
 
+  useEffect(() => {
+    loadView(activeView)
+  }, [activeView, loadView])
+
   return (
-    <AppLayout loading={loading} activeView={activeView} onNavigate={setActiveView}>
+    <AppLayout loading={viewLoading} activeView={activeView} onNavigate={setActiveView}>
       {error && (
         <Alert type="error" message={error.message || 'Failed to load data.'} />
       )}

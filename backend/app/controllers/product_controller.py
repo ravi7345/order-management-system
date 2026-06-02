@@ -8,8 +8,8 @@ def create_product(db: Session, payload: ProductCreate):
     return product_service.create_product(db, payload)
 
 
-def list_products(db: Session):
-    return product_service.get_products(db)
+def list_products(db: Session, page: int, page_size: int):
+    return product_service.get_products(db, page, page_size)
 
 
 def get_product(db: Session, product_id: int):

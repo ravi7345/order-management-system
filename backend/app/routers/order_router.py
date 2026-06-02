@@ -1,10 +1,10 @@
-from fastapi import APIRouter, Depends, Response, status
+from fastapi import APIRouter, Depends, Query, Response, status
 from sqlalchemy.orm import Session
 
 from app.controllers import order_controller
 from app.database import get_db
 from app.docs.responses import COMMON_RESPONSES
-from app.schemas import DashboardOut, OrderCreate, OrderOut
+from app.schemas import DashboardOut, OrderCreate, OrderOut, PaginatedOrdersOut
 
 router = APIRouter(tags=["Orders"])
 
@@ -31,13 +31,17 @@ def create_order(payload: OrderCreate, db: Session = Depends(get_db)):
 
 @router.get(
     "/orders",
-    response_model=list[OrderOut],
+    response_model=PaginatedOrdersOut,
     summary="List orders",
-    description="Retrieve all orders with customer and line-item details.",
-    responses={200: {"description": "List of orders"}},
+    description="Retrieve orders with customer and line-item details, paginated by newest first.",
+    responses={200: {"description": "Paginated list of orders"}},
 )
-def get_orders(db: Session = Depends(get_db)):
-    return order_controller.list_orders(db)
+def get_orders(
+    db: Session = Depends(get_db),
+    page: int = Query(1, ge=1, description="Page number (1-based)"),
+    page_size: int = Query(10, ge=1, le=100, description="Number of items per page"),
+):
+    return order_controller.list_orders(db, page, page_size)
 
 
 @router.get(

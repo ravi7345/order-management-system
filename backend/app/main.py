@@ -1,5 +1,7 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse, RedirectResponse
+from sqlalchemy.exc import IntegrityError
 
 from app.database import Base, engine
 from app.docs.openapi import API_DESCRIPTION, OPENAPI_TAGS
@@ -16,6 +18,14 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url="/openapi.json",
+    swagger_ui_parameters={
+        "defaultModelsExpandDepth": -1,
+        "displayRequestDuration": True,
+        "docExpansion": "list",
+        "filter": True,
+        "persistAuthorization": True,
+        "tryItOutEnabled": True,
+    },
     contact={
         "name": "Inventory API Support",
         "email": "support@example.com",
@@ -31,6 +41,20 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.exception_handler(IntegrityError)
+async def integrity_error_handler(_request: Request, _exc: IntegrityError):
+    return JSONResponse(
+        status_code=409,
+        content={"detail": "Duplicate or conflicting record."},
+    )
+
+
+@app.get("/", include_in_schema=False)
+def root():
+    """Redirect root URL to Swagger UI."""
+    return RedirectResponse(url="/docs")
 
 
 @app.get(

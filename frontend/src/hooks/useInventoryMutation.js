@@ -1,22 +1,28 @@
 import { useMutation } from './useMutation'
-import { useInventory } from '../context/InventoryContext'
 import { useNotification } from '../context/NotificationContext'
 
 /**
- * Mutation hook that auto-refreshes inventory and surfaces toast notifications.
  * @param {(...args: any[]) => Promise<any>} mutationFn
- * @param {string | ((result: any, ...args: any[]) => string)} successMessage
+ * @param {{
+ *   successMessage?: string | Function,
+ *   updateCache?: (result: any, ...args: any[]) => void,
+ * }} options
  */
-export function useInventoryMutation(mutationFn, successMessage) {
-  const { refresh } = useInventory()
+export function useInventoryMutation(mutationFn, options) {
   const { notifySuccess, notifyError } = useNotification()
+
+  const config =
+    typeof options === 'string' ? { successMessage: options } : options
+
+  const { successMessage, updateCache } = config
 
   return useMutation(mutationFn, {
     onSuccess: async (result, ...args) => {
       const message =
         typeof successMessage === 'function' ? successMessage(result, ...args) : successMessage
-      notifySuccess(message)
-      await refresh()
+      if (message) notifySuccess(message)
+
+      updateCache?.(result, ...args)
     },
     onError: (error) => notifyError(error.message),
   })

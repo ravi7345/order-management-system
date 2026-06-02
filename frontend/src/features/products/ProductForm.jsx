@@ -4,6 +4,7 @@ import { Button } from '../../components/ui/Button'
 import { FormField } from '../../components/ui/FormField'
 import { MESSAGES } from '../../constants/messages'
 import { useForm } from '../../hooks/useForm'
+import { useInventory } from '../../context/InventoryContext'
 import { useInventoryMutation } from '../../hooks/useInventoryMutation'
 import { INITIAL_PRODUCT_FORM } from './product.constants'
 import { validateProductForm } from './product.validators'
@@ -26,8 +27,9 @@ function mapProductToForm(product) {
   }
 }
 
-export function ProductForm({ editingProduct, onCancelEdit, onSaved }) {
+export function ProductForm({ editingProduct, onCancel, onSaved }) {
   const editingId = editingProduct?.id ?? null
+  const { invalidateDashboard, invalidateOrderOptions } = useInventory()
 
   const { values, handleChange, reset, validateAll, getFieldError } = useForm(
     INITIAL_PRODUCT_FORM,
@@ -36,7 +38,9 @@ export function ProductForm({ editingProduct, onCancelEdit, onSaved }) {
 
   const { mutate: saveProduct, loading } = useInventoryMutation(
     ({ id, payload }) => (id ? productsApi.update(id, payload) : productsApi.create(payload)),
-    (_, { id }) => (id ? MESSAGES.product.updated : MESSAGES.product.created),
+    {
+      successMessage: (_, { id }) => (id ? MESSAGES.product.updated : MESSAGES.product.created),
+    },
   )
 
   useEffect(() => {
@@ -47,11 +51,14 @@ export function ProductForm({ editingProduct, onCancelEdit, onSaved }) {
     event.preventDefault()
     if (!validateAll()) return
     await saveProduct({ id: editingId, payload: toPayload(values) })
+    invalidateDashboard()
+    invalidateOrderOptions()
     onSaved?.()
   }
 
   return (
     <form className="form-grid" onSubmit={handleSubmit} noValidate>
+      <p className="form-hint">All fields are required. SKU must be unique. Stock cannot be negative.</p>
       <FormField
         label="Product name"
         name="name"
@@ -61,7 +68,7 @@ export function ProductForm({ editingProduct, onCancelEdit, onSaved }) {
         required
       />
       <FormField
-        label="SKU"
+        label="SKU / code"
         name="sku"
         value={values.sku}
         onChange={handleChange}
@@ -93,8 +100,8 @@ export function ProductForm({ editingProduct, onCancelEdit, onSaved }) {
         <Button type="submit" loading={loading}>
           {editingId ? 'Update product' : 'Add product'}
         </Button>
-        {editingId && (
-          <Button type="button" variant="ghost" onClick={onCancelEdit}>
+        {onCancel && (
+          <Button type="button" variant="ghost" onClick={onCancel}>
             Cancel
           </Button>
         )}

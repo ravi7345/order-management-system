@@ -11,8 +11,14 @@ def create_product(db: Session, product_data: dict) -> models.Product:
     return product
 
 
-def get_products(db: Session) -> list[models.Product]:
-    return db.query(models.Product).order_by(models.Product.id.desc()).all()
+def get_products_query(db: Session):
+    return db.query(models.Product).order_by(models.Product.id.desc())
+
+
+def get_products_paginated(db: Session, page: int, page_size: int) -> tuple[list[models.Product], int]:
+    from app.utils.pagination import paginate_query
+
+    return paginate_query(get_products_query(db), page, page_size)
 
 
 def get_product_by_id(db: Session, product_id: int) -> models.Product | None:

@@ -1,17 +1,31 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { customersApi } from '../../api'
 import { Button } from '../../components/ui/Button'
-import { DataTable } from '../../components/ui/DataTable'
+import { PaginatedTable } from '../../components/ui/PaginatedTable'
 import { MESSAGES } from '../../constants/messages'
 import { useInventory } from '../../context/InventoryContext'
 import { useInventoryMutation } from '../../hooks/useInventoryMutation'
 
-export function CustomerTable() {
-  const { customers } = useInventory()
-  const { mutate: removeCustomer, loading } = useInventoryMutation(
-    customersApi.remove,
-    MESSAGES.customer.deleted,
-  )
+export function CustomerTable({ list }) {
+  const { refresh } = list
+  const { invalidateDashboard } = useInventory()
+  const [deletingId, setDeletingId] = useState(null)
+  const { mutate: removeCustomerApi } = useInventoryMutation(customersApi.remove, {
+    successMessage: MESSAGES.customer.deleted,
+  })
+
+  async function handleDelete(customerId) {
+    setDeletingId(customerId)
+    try {
+      await removeCustomerApi(customerId)
+      invalidateDashboard()
+      refresh()
+    } catch {
+      // handled by mutation hook
+    } finally {
+      setDeletingId(null)
+    }
+  }
 
   const columns = useMemo(
     () => [
@@ -22,14 +36,25 @@ export function CustomerTable() {
         key: 'actions',
         header: 'Actions',
         render: (row) => (
-          <Button variant="danger" loading={loading} onClick={() => removeCustomer(row.id)}>
+          <Button
+            variant="danger"
+            loading={deletingId === row.id}
+            onClick={() => handleDelete(row.id)}
+          >
             Delete
           </Button>
         ),
       },
     ],
-    [removeCustomer, loading],
+    [deletingId],
   )
 
-  return <DataTable columns={columns} rows={customers} emptyMessage="No customers yet." />
+  return (
+    <PaginatedTable
+      list={list}
+      columns={columns}
+      emptyMessage="No customers yet."
+      loadingMessage="Loading customers…"
+    />
+  )
 }

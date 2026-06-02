@@ -8,8 +8,8 @@ def create_customer(db: Session, payload: CustomerCreate):
     return customer_service.create_customer(db, payload)
 
 
-def list_customers(db: Session):
-    return customer_service.get_customers(db)
+def list_customers(db: Session, page: int, page_size: int):
+    return customer_service.get_customers(db, page, page_size)
 
 
 def get_customer(db: Session, customer_id: int):

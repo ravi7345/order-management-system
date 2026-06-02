@@ -6,7 +6,8 @@ from sqlalchemy.orm import Session
 
 from app import models
 from app.dao import customer_dao, order_dao, product_dao
-from app.schemas import DashboardOut, OrderCreate, OrderItemOut, OrderOut
+from app.schemas import DashboardOut, OrderCreate, OrderItemOut, OrderOut, PaginatedOrdersOut
+from app.utils.pagination import build_paginated_response
 
 
 def create_order(db: Session, payload: OrderCreate):
@@ -45,9 +46,10 @@ def create_order(db: Session, payload: OrderCreate):
     return to_order_response(get_order_or_404(db, order.id))
 
 
-def get_orders(db: Session):
-    orders = order_dao.get_orders(db)
-    return [to_order_response(order) for order in orders]
+def get_orders(db: Session, page: int, page_size: int) -> PaginatedOrdersOut:
+    orders, total = order_dao.get_orders_paginated(db, page, page_size)
+    items = [to_order_response(order) for order in orders]
+    return PaginatedOrdersOut(**build_paginated_response(items, total, page, page_size))
 
 
 def get_order_or_404(db: Session, order_id: int):

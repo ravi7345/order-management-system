@@ -1,10 +1,10 @@
-from fastapi import APIRouter, Depends, Response, status
+from fastapi import APIRouter, Depends, Query, Response, status
 from sqlalchemy.orm import Session
 
 from app.controllers import product_controller
 from app.database import get_db
 from app.docs.responses import COMMON_RESPONSES
-from app.schemas import ProductCreate, ProductOut, ProductUpdate
+from app.schemas import PaginatedProductsOut, ProductCreate, ProductOut, ProductUpdate
 
 router = APIRouter(prefix="/products", tags=["Products"])
 
@@ -27,13 +27,17 @@ def create_product(payload: ProductCreate, db: Session = Depends(get_db)):
 
 @router.get(
     "",
-    response_model=list[ProductOut],
+    response_model=PaginatedProductsOut,
     summary="List products",
-    description="Retrieve all products ordered by newest first.",
-    responses={200: {"description": "List of products"}},
+    description="Retrieve products ordered by newest first with pagination.",
+    responses={200: {"description": "Paginated list of products"}},
 )
-def get_products(db: Session = Depends(get_db)):
-    return product_controller.list_products(db)
+def get_products(
+    db: Session = Depends(get_db),
+    page: int = Query(1, ge=1, description="Page number (1-based)"),
+    page_size: int = Query(10, ge=1, le=100, description="Number of items per page"),
+):
+    return product_controller.list_products(db, page, page_size)
 
 
 @router.get(
@@ -69,9 +73,11 @@ def update_product(product_id: int, payload: ProductUpdate, db: Session = Depend
     "/{product_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete product",
+    description="Delete a product. Returns 409 if the product is linked to existing orders.",
     responses={
         204: {"description": "Product deleted successfully"},
         404: COMMON_RESPONSES[404],
+        409: COMMON_RESPONSES[409],
     },
 )
 def delete_product(product_id: int, db: Session = Depends(get_db)):

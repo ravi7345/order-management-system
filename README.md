@@ -38,7 +38,44 @@ Full-stack application with:
 ### Dashboard
 - `GET /dashboard`
 
-## Business Rules Enforced
+## Swagger API documentation
+
+FastAPI provides interactive Swagger UI out of the box:
+
+| URL | Description |
+|-----|-------------|
+| `http://localhost:8000/` | Redirects to Swagger UI |
+| `http://localhost:8000/docs` | **Swagger UI** — try all APIs |
+| `http://localhost:8000/redoc` | ReDoc alternative docs |
+| `http://localhost:8000/openapi.json` | OpenAPI JSON schema |
+
+After starting the backend, open **`/docs`** to explore and test endpoints with example payloads.
+
+## Requirements compliance
+
+### Data model
+- **Products:** name, SKU/code, price, quantity in stock
+- **Customers:** full name, email, phone number
+- **Orders:** customer reference, product line(s), quantity, total amount (backend-calculated)
+
+### Business rules (backend)
+- Unique product SKU and unique customer email
+- Non-negative product stock (API + DB constraint)
+- Orders blocked when inventory is insufficient
+- Stock reduced automatically on order creation
+- Stock restored on order/customer delete
+- Products linked to orders cannot be deleted
+- Order total calculated server-side only
+- Proper HTTP status codes: 201, 200, 204, 400, 404, 409, 422
+
+### Frontend UX
+- Responsive layout (desktop + mobile breakpoints)
+- Form validation with field-level errors
+- Success/error toast notifications
+- Feature-based component structure
+- Context + hooks for state management
+- Lazy API loading per view; targeted refresh on delete
+
 
 - Unique product SKU
 - Unique customer email

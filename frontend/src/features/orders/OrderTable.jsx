@@ -1,46 +1,42 @@
 import { useCallback, useMemo, useState } from 'react'
 import { ordersApi } from '../../api'
-import { Button } from '../../components/ui/Button'
-import { DataTable } from '../../components/ui/DataTable'
+import { PaginatedTable } from '../../components/ui/PaginatedTable'
 import { MESSAGES } from '../../constants/messages'
 import { useInventory } from '../../context/InventoryContext'
 import { useInventoryMutation } from '../../hooks/useInventoryMutation'
-import { useNotification } from '../../context/NotificationContext'
 import { formatCurrency } from '../../utils/format'
 import { OrderDetails } from './OrderDetails'
+import { OrderRowActions } from './OrderRowActions'
 
-export function OrderTable() {
-  const { orders } = useInventory()
-  const { notifyError } = useNotification()
-  const [selectedOrder, setSelectedOrder] = useState(null)
-  const [loadingDetails, setLoadingDetails] = useState(false)
+export function OrderTable({ list }) {
+  const { refresh } = list
+  const { invalidateDashboard } = useInventory()
+  const [selectedOrderId, setSelectedOrderId] = useState(null)
+  const [cancelingOrderId, setCancelingOrderId] = useState(null)
 
-  const { mutate: cancelOrder, loading: canceling } = useInventoryMutation(
-    ordersApi.remove,
-    MESSAGES.order.canceled,
-  )
+  const { mutate: cancelOrder } = useInventoryMutation(ordersApi.remove, {
+    successMessage: MESSAGES.order.canceled,
+  })
 
-  const viewDetails = useCallback(
-    async (orderId) => {
-      setLoadingDetails(true)
-      try {
-        const order = await ordersApi.getById(orderId)
-        setSelectedOrder(order)
-      } catch (error) {
-        notifyError(error.message)
-      } finally {
-        setLoadingDetails(false)
-      }
-    },
-    [notifyError],
-  )
+  const toggleDetails = useCallback((orderId) => {
+    setSelectedOrderId((current) => (current === orderId ? null : orderId))
+  }, [])
 
   const handleCancel = useCallback(
     async (orderId) => {
-      await cancelOrder(orderId)
-      if (selectedOrder?.id === orderId) setSelectedOrder(null)
+      setCancelingOrderId(orderId)
+      try {
+        await cancelOrder(orderId)
+        if (selectedOrderId === orderId) setSelectedOrderId(null)
+        invalidateDashboard()
+        refresh()
+      } catch {
+        // Error toast handled by useInventoryMutation
+      } finally {
+        setCancelingOrderId(null)
+      }
     },
-    [cancelOrder, selectedOrder],
+    [cancelOrder, invalidateDashboard, refresh, selectedOrderId],
   )
 
   const columns = useMemo(
@@ -56,24 +52,29 @@ export function OrderTable() {
         key: 'actions',
         header: 'Actions',
         render: (row) => (
-          <div className="table-actions">
-            <Button variant="secondary" loading={loadingDetails} onClick={() => viewDetails(row.id)}>
-              Details
-            </Button>
-            <Button variant="danger" loading={canceling} onClick={() => handleCancel(row.id)}>
-              Cancel
-            </Button>
-          </div>
+          <OrderRowActions
+            orderId={row.id}
+            cancelingOrderId={cancelingOrderId}
+            isExpanded={selectedOrderId === row.id}
+            onViewDetails={toggleDetails}
+            onCancel={handleCancel}
+          />
         ),
       },
     ],
-    [viewDetails, handleCancel, loadingDetails, canceling],
+    [toggleDetails, handleCancel, cancelingOrderId, selectedOrderId],
   )
 
   return (
-    <>
-      <DataTable columns={columns} rows={orders} emptyMessage="No orders yet." />
-      <OrderDetails order={selectedOrder} />
-    </>
+    <PaginatedTable
+      list={list}
+      columns={columns}
+      emptyMessage="No orders yet."
+      loadingMessage="Loading orders…"
+      expandedRowId={selectedOrderId}
+      renderExpandedRow={(order) => (
+        <OrderDetails order={order} onClose={() => setSelectedOrderId(null)} />
+      )}
+    />
   )
 }

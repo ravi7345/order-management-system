@@ -182,22 +182,106 @@ button, input, select {
 }
 
 .card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
   padding: 18px 20px 0;
 }
 
-.card__header h2 {
+.card__header-text h2 {
   font-size: 1.05rem;
   font-weight: 600;
 }
 
-.card__header p {
+.card__header-text p {
   margin-top: 4px;
   color: var(--text-muted);
   font-size: 0.875rem;
 }
 
+.card__header-action {
+  flex-shrink: 0;
+}
+
 .card__body {
   padding: 16px 20px 20px;
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(2px);
+}
+
+.modal {
+  position: relative;
+  width: 100%;
+  max-height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.18);
+}
+
+.modal--md {
+  max-width: 560px;
+}
+
+.modal--lg {
+  max-width: 720px;
+}
+
+.modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal__header h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.modal__close {
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.modal__close:hover {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.modal__body {
+  position: relative;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.modal__body .form-grid,
+.modal__body .stack {
+  margin-bottom: 0;
 }
 
 /* Forms */
@@ -214,8 +298,47 @@ button, input, select {
 
 .order-row {
   display: grid;
-  grid-template-columns: 1fr 120px;
+  grid-template-columns: 1fr 140px;
   gap: 12px;
+}
+
+.order-line {
+  display: grid;
+  grid-template-columns: 1fr 140px auto;
+  gap: 12px;
+  align-items: end;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.order-lines {
+  display: grid;
+  gap: 12px;
+}
+
+.order-summary {
+  display: grid;
+  gap: 4px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+}
+
+.order-summary strong {
+  font-size: 1.25rem;
+}
+
+.order-summary small {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+.form-hint {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.875rem;
 }
 
 .field {
@@ -374,7 +497,11 @@ button, input, select {
 .table-wrap {
   overflow-x: auto;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 8px 8px 0 0;
+}
+
+.paginated-table .table-wrap {
+  border-radius: 8px 8px 0 0;
 }
 
 .data-table {
@@ -405,6 +532,135 @@ button, input, select {
 
 .data-table tbody tr:hover {
   background: #fafafa;
+}
+
+.data-table__row--active {
+  background: var(--primary-soft) !important;
+}
+
+.data-table__expand-row td {
+  padding: 0;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+
+.data-table__expand-row:hover {
+  background: var(--bg);
+}
+
+.paginated-table {
+  position: relative;
+  display: grid;
+  gap: 0;
+}
+
+.paginated-table--loading .pagination {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  background: var(--bg);
+}
+
+.pagination__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+
+.pagination__summary {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.pagination__size {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.pagination__size select {
+  min-width: 4.5rem;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+
+.pagination__controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pagination__btn,
+.pagination__page {
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.875rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.pagination__btn:hover:not(:disabled),
+.pagination__page:hover:not(:disabled) {
+  background: var(--primary-soft);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.pagination__btn:disabled,
+.pagination__page:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.pagination__pages {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pagination__page--active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+  font-weight: 600;
+}
+
+.pagination__page--active:disabled {
+  opacity: 1;
+}
+
+.pagination__ellipsis {
+  min-width: 1.5rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  user-select: none;
 }
 
 .cell-stack {
@@ -445,11 +701,15 @@ button, input, select {
 
 /* Order details */
 .order-details {
-  margin-top: 16px;
+  margin-top: 0;
   padding: 16px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--bg);
+  border: none;
+  border-radius: 0;
+  background: transparent;
+}
+
+.order-details--inline {
+  animation: fadeUp 0.2s ease both;
 }
 
 .order-details__header {
@@ -458,6 +718,13 @@ button, input, select {
   align-items: flex-start;
   gap: 12px;
   margin-bottom: 12px;
+}
+
+.order-details__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .order-details__eyebrow {
@@ -470,7 +737,7 @@ button, input, select {
 
 .order-details__meta {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 12px;
   margin-bottom: 12px;
 }
@@ -620,6 +887,7 @@ button, input, select {
   }
 
   .order-row,
+  .order-line,
   .order-details__meta {
     grid-template-columns: 1fr;
   }

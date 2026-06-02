@@ -1,10 +1,13 @@
-export function Card({ title, subtitle, children, className = '' }) {
+export function Card({ title, subtitle, action, children, className = '' }) {
   return (
     <section className={`card ${className}`.trim()}>
-      {(title || subtitle) && (
+      {(title || subtitle || action) && (
         <header className="card__header">
-          {title && <h2>{title}</h2>}
-          {subtitle && <p>{subtitle}</p>}
+          <div className="card__header-text">
+            {title && <h2>{title}</h2>}
+            {subtitle && <p>{subtitle}</p>}
+          </div>
+          {action && <div className="card__header-action">{action}</div>}
         </header>
       )}
       <div className="card__body">{children}</div>

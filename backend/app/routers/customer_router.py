@@ -1,10 +1,10 @@
-from fastapi import APIRouter, Depends, Response, status
+from fastapi import APIRouter, Depends, Query, Response, status
 from sqlalchemy.orm import Session
 
 from app.controllers import customer_controller
 from app.database import get_db
 from app.docs.responses import COMMON_RESPONSES
-from app.schemas import CustomerCreate, CustomerOut
+from app.schemas import CustomerCreate, CustomerOut, PaginatedCustomersOut
 
 router = APIRouter(prefix="/customers", tags=["Customers"])
 
@@ -27,13 +27,17 @@ def create_customer(payload: CustomerCreate, db: Session = Depends(get_db)):
 
 @router.get(
     "",
-    response_model=list[CustomerOut],
+    response_model=PaginatedCustomersOut,
     summary="List customers",
-    description="Retrieve all customers ordered by newest first.",
-    responses={200: {"description": "List of customers"}},
+    description="Retrieve customers ordered by newest first with pagination.",
+    responses={200: {"description": "Paginated list of customers"}},
 )
-def get_customers(db: Session = Depends(get_db)):
-    return customer_controller.list_customers(db)
+def get_customers(
+    db: Session = Depends(get_db),
+    page: int = Query(1, ge=1, description="Page number (1-based)"),
+    page_size: int = Query(10, ge=1, le=100, description="Number of items per page"),
+):
+    return customer_controller.list_customers(db, page, page_size)
 
 
 @router.get(
