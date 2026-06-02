@@ -279,6 +279,14 @@ button, input, select {
   overflow-y: auto;
 }
 
+.modal__body .form-notice {
+  margin-bottom: 16px;
+}
+
+.modal__body .form-notice .alert {
+  margin-bottom: 0;
+}
+
 .modal__body .form-grid,
 .modal__body .stack {
   margin-bottom: 0;
@@ -794,7 +802,7 @@ button, input, select {
   position: fixed;
   top: 16px;
   right: 16px;
-  z-index: 200;
+  z-index: 1100;
   width: min(380px, calc(100vw - 32px));
 }
 
@@ -821,6 +829,12 @@ button, input, select {
   background: var(--danger-soft);
   color: var(--danger);
   border-color: #fecaca;
+}
+
+.alert--warning {
+  background: #fffbeb;
+  color: #b45309;
+  border-color: #fde68a;
 }
 
 .alert__close {

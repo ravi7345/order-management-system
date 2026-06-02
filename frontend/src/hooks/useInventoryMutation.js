@@ -6,6 +6,7 @@ import { useNotification } from '../context/NotificationContext'
  * @param {{
  *   successMessage?: string | Function,
  *   updateCache?: (result: any, ...args: any[]) => void,
+ *   onError?: (error: Error) => void,
  * }} options
  */
 export function useInventoryMutation(mutationFn, options) {
@@ -14,7 +15,7 @@ export function useInventoryMutation(mutationFn, options) {
   const config =
     typeof options === 'string' ? { successMessage: options } : options
 
-  const { successMessage, updateCache } = config
+  const { successMessage, updateCache, onError: onErrorCallback } = config
 
   return useMutation(mutationFn, {
     onSuccess: async (result, ...args) => {
@@ -24,6 +25,12 @@ export function useInventoryMutation(mutationFn, options) {
 
       updateCache?.(result, ...args)
     },
-    onError: (error) => notifyError(error.message),
+    onError: (error) => {
+      if (onErrorCallback) {
+        onErrorCallback(error)
+        return
+      }
+      notifyError(error.message)
+    },
   })
 }

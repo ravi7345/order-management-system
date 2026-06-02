@@ -15,4 +15,7 @@ export const MESSAGES = {
   load: {
     failed: 'Failed to load application data.',
   },
+  form: {
+    validationFailed: 'Please fix the highlighted fields before submitting.',
+  },
 }

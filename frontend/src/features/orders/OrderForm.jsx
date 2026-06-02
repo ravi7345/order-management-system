@@ -1,7 +1,8 @@
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { ordersApi } from '../../api'
 import { Button } from '../../components/ui/Button'
 import { FormField } from '../../components/ui/FormField'
+import { FormNotice } from '../../components/ui/FormNotice'
 import { SelectField } from '../../components/ui/SelectField'
 import { MESSAGES } from '../../constants/messages'
 import { useInventory } from '../../context/InventoryContext'
@@ -13,6 +14,7 @@ import { calculateOrderTotal, validateOrderForm } from './order.validators'
 
 export function OrderForm({ onCancel, onCreated }) {
   const { products, customers, applyOrderStockUpdates, refreshOrderOptions } = useInventory()
+  const [formNotice, setFormNotice] = useState(null)
   const validate = useCallback((values) => validateOrderForm(values, products), [products])
   const { values, setField, setValues, validateAll, getFieldError } = useForm(
     INITIAL_ORDER_FORM,
@@ -21,6 +23,7 @@ export function OrderForm({ onCancel, onCreated }) {
 
   const { mutate: createOrder, loading } = useInventoryMutation(ordersApi.create, {
     successMessage: MESSAGES.order.created,
+    onError: (error) => setFormNotice({ type: 'error', message: error.message }),
     updateCache: (order) => {
       applyOrderStockUpdates(order)
       refreshOrderOptions()
@@ -47,7 +50,12 @@ export function OrderForm({ onCancel, onCreated }) {
     [values.items, products],
   )
 
+  function clearNotice() {
+    setFormNotice(null)
+  }
+
   function updateLine(index, field, fieldValue) {
+    clearNotice()
     setValues((prev) => ({
       ...prev,
       items: prev.items.map((line, i) => (i === index ? { ...line, [field]: fieldValue } : line)),
@@ -55,10 +63,12 @@ export function OrderForm({ onCancel, onCreated }) {
   }
 
   function addLine() {
+    clearNotice()
     setValues((prev) => ({ ...prev, items: [...prev.items, { ...INITIAL_ORDER_LINE }] }))
   }
 
   function removeLine(index) {
+    clearNotice()
     setValues((prev) => ({
       ...prev,
       items: prev.items.length > 1 ? prev.items.filter((_, i) => i !== index) : prev.items,
@@ -67,21 +77,29 @@ export function OrderForm({ onCancel, onCreated }) {
 
   async function handleSubmit(event) {
     event.preventDefault()
-    if (!validateAll()) return
+    clearNotice()
+    if (!validateAll()) {
+      setFormNotice({ type: 'warning', message: MESSAGES.form.validationFailed })
+      return
+    }
 
-    await createOrder({
-      customer_id: Number(values.customer_id),
-      items: values.items.map((item) => ({
-        product_id: Number(item.product_id),
-        quantity: Number(item.quantity),
-      })),
-    })
-
-    setValues(INITIAL_ORDER_FORM)
+    try {
+      await createOrder({
+        customer_id: Number(values.customer_id),
+        items: values.items.map((item) => ({
+          product_id: Number(item.product_id),
+          quantity: Number(item.quantity),
+        })),
+      })
+      setValues(INITIAL_ORDER_FORM)
+    } catch {
+      // Error shown inline via onError
+    }
   }
 
   return (
     <form className="stack" onSubmit={handleSubmit} noValidate>
+      <FormNotice notice={formNotice} onDismiss={clearNotice} />
       <p className="form-hint">
         Order must include a customer, one or more products, quantities, and total amount
         (calculated by the server).
@@ -91,7 +109,10 @@ export function OrderForm({ onCancel, onCreated }) {
         label="Customer reference"
         name="customer_id"
         value={values.customer_id}
-        onChange={(e) => setField('customer_id', e.target.value)}
+        onChange={(event) => {
+          clearNotice()
+          setField('customer_id', event.target.value)
+        }}
         options={customerOptions}
         placeholder="Select customer"
         error={getFieldError('customer_id')}

@@ -1,7 +1,8 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { productsApi } from '../../api'
 import { Button } from '../../components/ui/Button'
 import { FormField } from '../../components/ui/FormField'
+import { FormNotice } from '../../components/ui/FormNotice'
 import { MESSAGES } from '../../constants/messages'
 import { useForm } from '../../hooks/useForm'
 import { useInventory } from '../../context/InventoryContext'
@@ -30,6 +31,7 @@ function mapProductToForm(product) {
 export function ProductForm({ editingProduct, onCancel, onSaved }) {
   const editingId = editingProduct?.id ?? null
   const { invalidateDashboard, invalidateOrderOptions } = useInventory()
+  const [formNotice, setFormNotice] = useState(null)
 
   const { values, handleChange, reset, validateAll, getFieldError } = useForm(
     INITIAL_PRODUCT_FORM,
@@ -40,30 +42,51 @@ export function ProductForm({ editingProduct, onCancel, onSaved }) {
     ({ id, payload }) => (id ? productsApi.update(id, payload) : productsApi.create(payload)),
     {
       successMessage: (_, { id }) => (id ? MESSAGES.product.updated : MESSAGES.product.created),
+      onError: (error) => setFormNotice({ type: 'error', message: error.message }),
     },
   )
 
   useEffect(() => {
     reset(editingProduct ? mapProductToForm(editingProduct) : INITIAL_PRODUCT_FORM)
+    setFormNotice(null)
   }, [editingProduct, reset])
+
+  function clearNotice() {
+    setFormNotice(null)
+  }
+
+  function handleFieldChange(event) {
+    clearNotice()
+    handleChange(event)
+  }
 
   async function handleSubmit(event) {
     event.preventDefault()
-    if (!validateAll()) return
-    await saveProduct({ id: editingId, payload: toPayload(values) })
-    invalidateDashboard()
-    invalidateOrderOptions()
-    onSaved?.()
+    clearNotice()
+    if (!validateAll()) {
+      setFormNotice({ type: 'warning', message: MESSAGES.form.validationFailed })
+      return
+    }
+
+    try {
+      await saveProduct({ id: editingId, payload: toPayload(values) })
+      invalidateDashboard()
+      invalidateOrderOptions()
+      onSaved?.()
+    } catch {
+      // Error shown inline via onError
+    }
   }
 
   return (
     <form className="form-grid" onSubmit={handleSubmit} noValidate>
+      <FormNotice notice={formNotice} onDismiss={clearNotice} />
       <p className="form-hint">All fields are required. SKU must be unique. Stock cannot be negative.</p>
       <FormField
         label="Product name"
         name="name"
         value={values.name}
-        onChange={handleChange}
+        onChange={handleFieldChange}
         error={getFieldError('name')}
         required
       />
@@ -71,7 +94,7 @@ export function ProductForm({ editingProduct, onCancel, onSaved }) {
         label="SKU / code"
         name="sku"
         value={values.sku}
-        onChange={handleChange}
+        onChange={handleFieldChange}
         error={getFieldError('sku')}
         required
       />
@@ -82,7 +105,7 @@ export function ProductForm({ editingProduct, onCancel, onSaved }) {
         min="0.01"
         step="0.01"
         value={values.price}
-        onChange={handleChange}
+        onChange={handleFieldChange}
         error={getFieldError('price')}
         required
       />
@@ -92,7 +115,7 @@ export function ProductForm({ editingProduct, onCancel, onSaved }) {
         type="number"
         min="0"
         value={values.quantity_in_stock}
-        onChange={handleChange}
+        onChange={handleFieldChange}
         error={getFieldError('quantity_in_stock')}
         required
       />
